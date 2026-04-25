@@ -1,0 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --bg-primary: #0A0A0B;
+  --bg-secondary: #141416;
+  --bg-tertiary: #1C1C1F;
+  --accent: #3B82F6;
+  --accent-muted: rgba(59, 130, 246, 0.1);
+  --text-primary: #F4F4F5;
+  --text-secondary: #A1A1AA;
+  --border: #27272A;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+}
+
+@layer base {
+  body {
+    @apply bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans antialiased overflow-hidden;
+  }
+}
+
+/* Reusable Layout Components */
+.layout-grid {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+}
+
+.header-blur {
+  @apply sticky top-0 z-50 bg-[var(--bg-primary)]/80 backdrop-blur-md border-b border-[var(--border)];
+}
+
+.main-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full h-full overflow-y-auto;
+}
+
+/* UI Elements */
+.card {
+  @apply bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-6 shadow-sm transition-all hover:bg-[var(--bg-tertiary)];
+}
+
+.btn {
+  @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer;
+}
+
+.btn-primary {
+  @apply bg-[var(--accent)] text-white hover:bg-blue-600;
+}
+
+.btn-ghost {
+  @apply hover:bg-[var(--accent-muted)] text-[var(--text-secondary)] hover:text-(--accent);
+}
+
+.nav-tab {
+  @apply relative px-4 py-2 text-sm font-medium transition-all text-[var(--text-secondary)] hover:text-white cursor-pointer whitespace-nowrap;
+}
+
+.nav-tab.active {
+  @apply text-white;
+}
+
+.nav-tab.active::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-full h-0.5 bg-[var(--accent)] rounded-full;
+}
+
+/* Micro-labels & Typography */
+.label-mono {
+  @apply font-mono text-[10px] uppercase tracking-widest text-[var(--text-secondary)];
+}
+
+.title-large {
+  @apply text-2xl font-semibold tracking-tight;
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-[var(--border)] rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-[var(--text-secondary)]/30;
+}
