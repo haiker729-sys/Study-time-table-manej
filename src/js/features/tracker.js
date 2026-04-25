@@ -23,7 +23,9 @@ export const Tracker = {
         gamification.syncXPFromTracker();
       }
 
-      this.render();
+      if (this.app.state.currentTab === 'tracker') {
+        this.app.renderSafe('tracker');
+      }
     } catch (e) {
       console.error('[Tracker] State update failure:', e);
     }

@@ -18,6 +18,10 @@ import { Analytics } from '../features/analytics.js';
 import { Gamification } from '../features/gamification.js';
 import { Notes } from '../features/notes.js';
 import { FocusMode } from '../features/focusMode.js';
+import { AI } from './ai.js';
+import { Firebase } from './firebase.js';
+import { Cloud } from './cloud.js';
+import { AIAssistant } from '../features/aiAssistant.js';
 
 class App {
   constructor() {
@@ -78,7 +82,12 @@ class App {
 
   init() {
     try {
-      this.renderLayout();
+      this.log('Initializing System Engine...');
+      const layoutMounted = this.renderLayout();
+      
+      if (!layoutMounted) {
+        throw new Error('Storage or Root Element inaccessible');
+      }
 
       // Core Module Registration
       this.registerModule('timetable', Timetable);
@@ -92,19 +101,35 @@ class App {
       this.registerModule('notes', Notes);
       this.registerModule('focus', FocusMode);
 
+      // Advanced Modules
+      AI.init();
+      this.registerModule('cloud', Cloud);
+      this.registerModule('ai', AIAssistant);
+
       this.router = new Router((tab) => this.switchTab(tab));
+      
+      // Force initial render of the current tab
+      this.renderSafe(this.state.currentTab);
       this.updateActiveTabUI();
 
       this.log('Core Engine Online');
     } catch (e) {
-      this.renderError('Critical System Boot Error');
       console.error('[Aether] Boot Failure:', e);
+      this.renderError(`Critical System Boot Error: ${e.message}`);
     }
   }
 
   renderLayout() {
-    const root = document.getElementById('root');
-    if (!root || root.querySelector('.layout-grid')) return;
+    const root = document.getElementById('app');
+    if (!root) {
+      console.error('[Aether] Target root element "#app" not found in DOM');
+      return false;
+    }
+    
+    // Quick Render Test
+    root.innerHTML = "<h1>App Loaded</h1>";
+    
+    if (root.querySelector('.layout-grid')) return true;
 
     try {
       root.innerHTML = `
@@ -121,25 +146,49 @@ class App {
                   </div>
                   <div>
                     <h1 class="text-lg font-semibold tracking-tight">${APP_CONFIG.name}</h1>
-                    <p class="label-mono opacity-60">Architect // v${APP_CONFIG.version}</p>
+                    <div class="flex items-center gap-2">
+                      <p class="label-mono opacity-60">Architect // v${APP_CONFIG.version}</p>
+                      <div class="w-1 h-1 bg-[var(--border)] rounded-full"></div>
+                      <span id="sync-status" class="label-mono text-[8px] ${this.state.user.isLoggedIn ? 'text-[var(--success)]' : 'opacity-30'}">
+                        ${this.state.user.isLoggedIn ? 'CLOUD_SYNC_ACTIVE' : 'LOCAL_ONLY'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <nav id="main-nav" class="flex items-center space-x-1 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide w-full sm:w-auto">
-                  ${APP_CONFIG.tabs.map(tab => `
-                    <button 
-                      class="nav-tab ${this.state.currentTab === tab.id ? 'active' : ''}" 
-                      data-tab="${tab.id}"
-                    >
-                      ${tab.label}
-                    </button>
-                  `).join('')}
-                </nav>
+                <div class="flex items-center gap-4">
+                  <nav id="main-nav" class="flex items-center space-x-1 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+                    ${APP_CONFIG.tabs.map(tab => `
+                      <button 
+                        class="nav-tab ${this.state.currentTab === tab.id ? 'active' : ''}" 
+                        data-tab="${tab.id}"
+                      >
+                        ${tab.label}
+                      </button>
+                    `).join('')}
+                  </nav>
+                  
+                  <div class="flex items-center pl-4 border-l border-[var(--border)] gap-3">
+                    ${this.state.user.isLoggedIn ? `
+                      <div class="text-right hidden sm:block">
+                        <p class="text-[10px] font-bold leading-none">${this.state.user.email?.split('@')[0]}</p>
+                        <button id="logout-btn" class="text-[8px] label-mono opacity-40 hover:opacity-100 uppercase">Sign Out</button>
+                      </div>
+                      <div class="w-8 h-8 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center">
+                        <span class="text-[10px] font-bold text-[var(--accent)] font-mono">${this.state.user.email?.[0].toUpperCase()}</span>
+                      </div>
+                    ` : `
+                      <button id="login-btn" class="btn btn-primary py-1 px-3 text-[10px] label-mono">LOGIN</button>
+                    `}
+                  </div>
+                </div>
               </div>
             </div>
           </header>
 
           <main id="app-content" class="main-container fade-in">
-            <!-- Dynamic Module Ingress -->
+            <div class="flex items-center justify-center h-full opacity-20">
+               <p class="label-mono">Initializing Interface...</p>
+            </div>
           </main>
 
           <footer class="border-t border-[var(--border)] py-4 bg-[var(--bg-secondary)]">
@@ -151,8 +200,10 @@ class App {
       `;
 
       this.attachEvents();
+      return true;
     } catch (e) {
       console.error('[Aether] Layout Render Error:', e);
+      return false;
     }
   }
 
@@ -167,15 +218,38 @@ class App {
         }
       });
     }
+
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) {
+      loginBtn.onclick = async () => {
+        try {
+          await Firebase.signIn();
+        } catch (e) {
+          console.error('Login system fault:', e);
+        }
+      };
+    }
+
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.onclick = async () => {
+        await Firebase.signOut();
+      };
+    }
   }
 
   switchTab(tabId) {
-    if (this.isRendering) return;
+    if (this.state.currentTab === tabId) return;
     
     this.log(`Routing Node: ${tabId}`);
     this.state.currentTab = tabId;
     this.saveState();
     this.updateActiveTabUI();
+    this.renderSafe(tabId);
+  }
+
+  renderSafe(tabId) {
+    if (this.isRendering) return;
     this.renderTabContent(tabId);
   }
 
@@ -188,12 +262,19 @@ class App {
   }
 
   renderTabContent(tabId) {
+    this.log(`Rendering View Layer: ${tabId}`);
     const content = this.getContentContainer();
-    if (!content) return;
+    if (!content) {
+      console.error('[Aether] Content container missing during render');
+      return;
+    }
 
     this.isRendering = true;
 
     try {
+      // Pre-render clear
+      content.innerHTML = "";
+      
       content.classList.remove('fade-in');
       void content.offsetWidth;
       content.classList.add('fade-in');
@@ -202,6 +283,7 @@ class App {
         'schedule': 'timetable',
         'tracker': 'tracker',
         'focus': 'focus',
+        'ai': 'ai',
         'analytics': 'analytics',
         'evolution': 'gamification',
         'notes': 'notes',
@@ -213,8 +295,10 @@ class App {
       const module = this.modules.get(moduleId);
 
       if (module && typeof module.render === 'function') {
+        this.log(`Executing Module Render: ${moduleId}`);
         module.render();
       } else {
+        this.log(`No active module found for: ${tabId}, showing placeholder`);
         this.renderPlaceholder(tabId);
       }
     } catch (e) {
@@ -260,10 +344,9 @@ class App {
 }
 
 // Global initialization
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
+  if (!window.__appInitialized) {
+    window.__appInitialized = true;
     window.app = new App();
-  });
-} else {
-  window.app = new App();
-}
+  }
+});

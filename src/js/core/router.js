@@ -30,6 +30,9 @@ export class Router {
         }
       }
       
+      if (this.currentTab === hash) return;
+      this.currentTab = hash;
+      
       this.onRouteMatch(hash);
     } catch (e) {
       console.error('[Router] Fatal Error:', e);
@@ -38,6 +41,11 @@ export class Router {
 
   navigate(route) {
     if (this.isValidRoute(route)) {
+      if (window.location.hash === `#${route}`) {
+        // Force trigger if somehow UI is out of sync but don't loop
+        this.handleRoute();
+        return;
+      }
       window.location.hash = route;
     } else {
       console.warn(`[Router] Navigation rejected: Invalid route "${route}"`);

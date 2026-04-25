@@ -13,6 +13,12 @@ export const Storage = {
     try {
       const stringValue = JSON.stringify(value);
       localStorage.setItem(`${STORAGE_PREFIX}${key}`, stringValue);
+      
+      // Auto-sync to cloud if possible
+      if (window.app && window.app.modules) {
+        const cloud = window.app.modules.get('cloud');
+        if (cloud) cloud.syncToCloud();
+      }
       return true;
     } catch (e) {
       console.error('[Storage] Write Error:', e);

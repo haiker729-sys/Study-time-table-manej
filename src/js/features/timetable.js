@@ -17,7 +17,10 @@ export const Timetable = {
       });
       this.app.state.timetable = subjects;
       this.app.saveState();
-      this.render();
+      
+      if (this.app.state.currentTab === 'schedule') {
+        this.app.renderSafe('schedule');
+      }
     } catch (e) {
       console.error('[Timetable] Add failure:', e);
     }
@@ -28,7 +31,10 @@ export const Timetable = {
       const subjects = this.app.state?.timetable || [];
       this.app.state.timetable = subjects.filter(s => s.id !== id);
       this.app.saveState();
-      this.render();
+      
+      if (this.app.state.currentTab === 'schedule') {
+        this.app.renderSafe('schedule');
+      }
     } catch (e) {
       console.error('[Timetable] Delete failure:', e);
     }

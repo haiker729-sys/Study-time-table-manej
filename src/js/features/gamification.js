@@ -40,7 +40,11 @@ export const Gamification = {
     this.app.state.gamification.xp += amount;
     this.checkBadges();
     this.app.saveState();
-    this.render();
+    
+    // Only re-render if we are actually viewing the module
+    if (this.app.state.currentTab === 'evolution') {
+      this.app.renderSafe('evolution');
+    }
   },
 
   checkBadges() {

@@ -28,14 +28,14 @@ export const Motivation = {
     this.timer = setInterval(() => {
       try {
         this.currentIndex = (this.currentIndex + 1) % this.quotes.length;
-        this.updateUI();
+        this.updateQuote();
       } catch (e) {
         console.warn('[Motivation] Auto-change failure');
       }
     }, 15000);
   },
 
-  updateUI() {
+  updateQuote() {
     try {
       const quoteEl = document.getElementById('motivation-quote');
       const authEl = document.getElementById('motivation-auth');

@@ -47,7 +47,10 @@ export const Goals = {
       goals.lastCompletedDate = today;
       
       this.app.saveState();
-      this.render();
+      
+      if (this.app.state.currentTab === 'analytics') {
+        this.app.renderSafe('analytics');
+      }
       
       // Award XP via gamification if possible
       const gamification = this.app.modules?.get('gamification');

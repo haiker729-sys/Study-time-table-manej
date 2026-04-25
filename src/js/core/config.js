@@ -12,6 +12,7 @@ export const APP_CONFIG = {
     { id: 'schedule', label: 'Schedule', icon: 'Calendar' },
     { id: 'tracker', label: 'Tracker', icon: 'Activity' },
     { id: 'focus', label: 'Focus', icon: 'Clock' },
+    { id: 'ai', label: 'Ask AI', icon: 'Sparkles' },
     { id: 'analytics', label: 'Analytics', icon: 'BarChart' },
     { id: 'evolution', label: 'Evolution', icon: 'Zap' },
     { id: 'notes', label: 'Notes', icon: 'FileText' },
@@ -25,7 +26,10 @@ export const INITIAL_STATE = {
   currentTab: APP_CONFIG.defaultTab,
   user: {
     name: 'Explorer',
-    goal: 'Excellence'
+    goal: 'Excellence',
+    isLoggedIn: false,
+    id: null,
+    email: null
   },
   settings: {
     totalDays: 60,
